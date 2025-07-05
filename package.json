@@ -1,0 +1,37 @@
+{
+  "name": "sfbrowser",
+  "version": "1.0.0",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "electron-tsc src/main.ts",
+    "pack": "electron-builder --dir",
+    "dist": "npm run build-ts && electron-builder",
+    "build-ts": "tsc"
+  },
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-builder": "^24.6.0",
+    "typescript": "^5.0.0"
+  },
+  "build": {
+    "productName": "SingleSiteBrowser",
+    "appId": "com.my_company.single_site_browser",
+    "files": [
+      "dist/**/*"
+    ],
+    "extraResources": [
+      "embedded_ext_placeholder",
+      "native_host_placeholder"
+    ],
+    "asar": true,
+    "win": {
+      "target": "portable"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "bin": {
+    "electron-tsc": "scripts/electron-tsc.js"
+  }
+}
