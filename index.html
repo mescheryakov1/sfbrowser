@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Browser</title>
+<style>
+  body { margin: 0; }
+  #toolbar { background: #eee; padding: 5px; display: flex; }
+  #toolbar button { margin-right: 10px; }
+  #webview { position: absolute; top: 40px; left: 0; right: 0; bottom: 0; }
+</style>
+</head>
+<body>
+  <div id="toolbar">
+    <button id="back">Назад</button>
+    <button id="home">Домой</button>
+  </div>
+  <webview id="webview" src="https://www.cryptopro.ru/sites/default/files/products/cades/demopage/cades_bes_sample.html"></webview>
+  <script>
+    const startURL = 'https://www.cryptopro.ru/sites/default/files/products/cades/demopage/cades_bes_sample.html';
+    const view = document.getElementById('webview');
+    document.getElementById('back').addEventListener('click', () => view.goBack());
+    document.getElementById('home').addEventListener('click', () => view.loadURL(startURL));
+  </script>
+</body>
+</html>

@@ -17,7 +17,8 @@
     "productName": "SingleSiteBrowser",
     "appId": "com.my_company.single_site_browser",
     "files": [
-      "dist/**/*"
+      "dist/**/*",
+      "index.html"
     ],
     "extraResources": [
       "embedded_ext_placeholder",

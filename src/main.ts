@@ -8,13 +8,15 @@ async function createWindow() {
     autoHideMenuBar: true,
     fullscreenable: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      webviewTag: true
     }
   });
 
   win.setMenuBarVisibility(false);
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-  await win.loadURL('https://example.com');
+  const indexPath = path.join(__dirname, '..', 'index.html');
+  await win.loadFile(indexPath);
 }
 
 app.whenReady().then(async () => {
