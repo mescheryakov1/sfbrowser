@@ -9,7 +9,7 @@ npm install
 npm run dist
 ```
 
-Resulting installers or executables will be in the `dist/` folder.
+The `dist` script disables publishing so no GitHub token is required. Resulting installers or executables will be in the `dist/` folder.
 
 ## Extension
 

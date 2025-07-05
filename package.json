@@ -5,7 +5,7 @@
   "scripts": {
     "start": "electron-tsc src/main.ts",
     "pack": "electron-builder --dir",
-    "dist": "npm run build-ts && electron-builder",
+    "dist": "npm run build-ts && electron-builder --publish never",
     "build-ts": "tsc"
   },
   "devDependencies": {
