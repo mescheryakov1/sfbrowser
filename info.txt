@@ -1,0 +1,3 @@
+manifestv2 = iifchhfnnmpdbibifmljnfjhpififfog
+manifestv3 = pfhgbfnnjiafkhfdkmpiflachepdcjod
+nmcades_plugin_api.js
