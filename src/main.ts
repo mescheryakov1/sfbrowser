@@ -19,19 +19,7 @@ async function createWindow() {
   await win.loadFile(indexPath);
 }
 
-app.whenReady().then(async () => {
-  ['CommandOrControl+T', 'CommandOrControl+N', 'F11', 'Alt+F4']
-    .forEach(accel => globalShortcut.register(accel, () => {}));
-
-  const nmDir = path.join(app.getPath('userData'), 'native_messaging');
-  if (!fs.existsSync(nmDir)) {
-    fs.mkdirSync(nmDir, { recursive: true });
-  }
-  const hasManifest = fs.readdirSync(nmDir).some(f => f.endsWith('.json'));
-  if (!hasManifest) {
-    console.warn('TODO: разместите manifest и бинарь хоста');
-  }
-
+async function loadExtensions() {
   const extRoot = path.join(process.resourcesPath, 'embedded_ext_placeholder');
   if (fs.existsSync(extRoot)) {
     const dirs = fs.readdirSync(extRoot, { withFileTypes: true })
@@ -51,8 +39,25 @@ app.whenReady().then(async () => {
   } else {
     console.warn('TODO: поместите сюда своё расширение');
   }
+}
+
+app.whenReady().then(async () => {
+  ['CommandOrControl+T', 'CommandOrControl+N', 'F11', 'Alt+F4']
+    .forEach(accel => globalShortcut.register(accel, () => {}));
+
+  const nmDir = path.join(app.getPath('userData'), 'native_messaging');
+  if (!fs.existsSync(nmDir)) {
+    fs.mkdirSync(nmDir, { recursive: true });
+  }
+  const hasManifest = fs.readdirSync(nmDir).some(f => f.endsWith('.json'));
+  if (!hasManifest) {
+    console.warn('TODO: разместите manifest и бинарь хоста');
+  }
 
   await createWindow();
+
+  // Загрузка расширений после отображения окна
+  loadExtensions().catch(e => console.error(e));
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
