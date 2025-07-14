@@ -32,11 +32,23 @@ app.whenReady().then(async () => {
     console.warn('TODO: разместите manifest и бинарь хоста');
   }
 
-  const extPath = path.join(process.resourcesPath, 'embedded_ext_placeholder');
-  try {
-    await session.defaultSession.loadExtension(extPath, { allowFileAccess: true });
-    console.log('Extension loaded');
-  } catch (e) {
+  const extRoot = path.join(process.resourcesPath, 'embedded_ext_placeholder');
+  if (fs.existsSync(extRoot)) {
+    const dirs = fs.readdirSync(extRoot, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => path.join(extRoot, d.name));
+    for (const dir of dirs) {
+      try {
+        await session.defaultSession.loadExtension(dir, { allowFileAccess: true });
+        console.log('Extension loaded from', dir);
+      } catch (e) {
+        console.warn('Failed to load extension from', dir, e);
+      }
+    }
+    if (!dirs.length) {
+      console.warn('TODO: поместите сюда своё расширение');
+    }
+  } else {
     console.warn('TODO: поместите сюда своё расширение');
   }
 

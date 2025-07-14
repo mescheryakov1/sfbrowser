@@ -13,7 +13,15 @@ The `dist` script disables publishing so no GitHub token is required. Resulting 
 
 ## Extension
 
-Place your packed extension inside `embedded_ext_placeholder/` before building. The directory will be packaged as-is.
+Two packed extensions are included in the repository (`iifchhfnnmpdbibifmljnfjhpififfog.zip` and `pfhgbfnnjiafkhfdkmpiflachepdcjod.zip`).
+During the build step they are automatically extracted into `embedded_ext_placeholder/` by the `prepare-ext` script so that they become part of the final executable.
+You can run this step manually via:
+
+```bash
+npm run prepare-ext
+```
+
+The resulting directories will then be packaged as-is.
 
 ## Native Messaging Host
 
