@@ -11,6 +11,16 @@ npm run dist
 
 The `dist` script disables publishing so no GitHub token is required. Resulting installers or executables will be in the `dist/` folder.
 
+## GitHub Actions CI
+
+Continuous integration builds for Linux and Windows are configured in
+`.github/workflows/build.yml`. Each run installs dependencies, executes
+`npm run dist` and uploads the resulting binaries as artifacts.
+
+You can download the ready-made `.AppImage` or `.exe` from the **Actions** tab
+of your repository by selecting a build run and choosing the artifact for your
+platform.
+
 ## Extension
 
 Two packed extensions are included in the repository (`iifchhfnnmpdbibifmljnfjhpififfog.zip` and `pfhgbfnnjiafkhfdkmpiflachepdcjod.zip`).
