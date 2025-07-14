@@ -5,13 +5,15 @@
   "scripts": {
     "start": "electron-tsc src/main.ts",
     "pack": "electron-builder --dir",
-    "dist": "npm run build-ts && electron-builder --publish never",
-    "build-ts": "tsc"
+    "dist": "npm run build-ts && npm run prepare-ext && electron-builder --publish never",
+    "build-ts": "tsc",
+    "prepare-ext": "node scripts/prepare-ext.js"
   },
   "devDependencies": {
     "electron": "^26.0.0",
     "electron-builder": "^24.6.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "adm-zip": "^0.5.10"
   },
   "build": {
     "productName": "SingleSiteBrowser",
