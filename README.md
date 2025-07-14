@@ -36,8 +36,4 @@ The resulting directories will then be packaged as-is.
 ## Native Messaging Host
 
 Provide your host manifest and executable inside `native_host_placeholder/` to package with the application.
-After the first run, copy the manifest and binary to:
-```
-{userData}/native_messaging/
-```
-where `{userData}` is reported by the app. If the directory is empty, you'll see a warning on startup.
+On Windows the app copies files from this folder to `{userData}/native_messaging/` automatically and registers the host in the registry. On Linux you still need to place the manifest and binary manually in `{userData}/native_messaging/` after the first run.

@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Ping Host Extension",
+  "version": "1.0",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["nativeMessaging"],
+  "action": {
+    "default_title": "Ping Host"
+  }
+}
