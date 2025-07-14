@@ -2,7 +2,7 @@ import { app, BrowserWindow, session, globalShortcut } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 
-async function createWindow() {
+function createWindow() {
   const win = new BrowserWindow({
     kiosk: true,
     autoHideMenuBar: true,
@@ -16,7 +16,8 @@ async function createWindow() {
   win.setMenuBarVisibility(false);
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   const indexPath = path.join(__dirname, '..', 'index.html');
-  await win.loadFile(indexPath);
+  win.loadFile(indexPath).catch(e => console.error('Failed to load page', e));
+  return win;
 }
 
 async function loadExtensions() {
@@ -54,10 +55,12 @@ app.whenReady().then(async () => {
     console.warn('TODO: разместите manifest и бинарь хоста');
   }
 
-  await createWindow();
+  createWindow();
 
   // Загрузка расширений после отображения окна
-  loadExtensions().catch(e => console.error(e));
+  setImmediate(() => {
+    loadExtensions().catch(e => console.error(e));
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
