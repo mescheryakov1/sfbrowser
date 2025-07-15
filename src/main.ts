@@ -3,7 +3,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 import log from 'electron-log';
 
-log.transports.file.level = 'info';
+const logLevel = (process.env.LOG_LEVEL || 'debug') as any;
+log.transports.file.level = logLevel;
+log.transports.console.level = logLevel;
 log.transports.file.maxSize = 5_242_880; // 5 MiB
 log.info('=== app start ===');
 
