@@ -1,13 +1,16 @@
+import log from 'electron-log';
+log.initialize({ preload: true });       // перехватывает console.* в рендерере
+log.transports.file.level = 'debug';     // или 'silly' для полной детализации
+log.transports.console.level = 'debug';
+log.transports.file.format =
+  '{y}-{m}-{d} {h}:{i}:{s}.{ms} | {processType}:{level} | {text}';
+log.info('=== App start with DEBUG level ===');
+
 import { app, BrowserWindow, session, globalShortcut } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import log from 'electron-log';
 
-const logLevel = (process.env.LOG_LEVEL || 'debug') as any;
-log.transports.file.level = logLevel;
-log.transports.console.level = logLevel;
 log.transports.file.maxSize = 5_242_880; // 5 MiB
-log.info('=== app start ===');
 
 async function createWindow() {
   log.info('Creating browser window');
