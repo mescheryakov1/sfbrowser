@@ -10,6 +10,13 @@ import { app, BrowserWindow, session, globalShortcut } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 
+app.commandLine.appendSwitch('enable-logging');
+log.debug('[main] chromium logging enabled');
+
+app.once('ready', () => log.debug('[main] app ready'));
+app.on('before-quit', () => log.debug('[main] before quit'));
+process.on('uncaughtException', e => log.error('[main] uncaught', e));
+
 log.transports.file.maxSize = 5_242_880; // 5 MiB
 
 async function createWindow() {
@@ -23,6 +30,14 @@ async function createWindow() {
       webviewTag: true
     }
   });
+
+  log.debug('[main] BrowserWindow created');
+
+  win.once('ready-to-show', () => log.debug('[win] ready-to-show'));
+  win.webContents.on('did-start-loading', () =>
+    log.debug('[win] did-start-loading'));
+  win.webContents.on('did-finish-load', () =>
+    log.debug('[win] did-finish-load'));
 
   win.setMenuBarVisibility(false);
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -54,6 +69,18 @@ async function loadExtensions() {
   }
 }
 
+async function loadCryptoProExt() {
+  const extDir = path.join(process.resourcesPath, 'crypto_extension');
+  await session.defaultSession.loadExtension(extDir);
+  log.debug('[ext] CryptoPro extension loaded');
+}
+
+session.defaultSession.on('select-serial-port', () =>
+  log.debug('[ext] select-serial-port triggered'));
+
+(session.defaultSession as any).on('service-worker-context-lost', (e: unknown) =>
+  log.debug('[ext] service-worker lost', e));
+
 app.whenReady().then(async () => {
   ['CommandOrControl+T', 'CommandOrControl+N', 'F11', 'Alt+F4']
     .forEach(accel => globalShortcut.register(accel, () => {}));
@@ -74,6 +101,7 @@ app.whenReady().then(async () => {
   // Загрузка расширений после отображения окна
   log.info('Loading extensions');
   loadExtensions().catch(e => log.error(e));
+  loadCryptoProExt().catch(e => log.error(e));
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -83,6 +111,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+  log.debug('[main] all windows closed');
   if (process.platform !== 'darwin') {
     app.quit();
   }
