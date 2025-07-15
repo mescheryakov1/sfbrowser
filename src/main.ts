@@ -4,25 +4,53 @@ import * as fs from 'fs';
 
 const debugEnabled = process.argv.includes('--debug') || process.argv.includes('/debug');
 
-function log(...args: any[]) {
-  if (debugEnabled) {
-    console.log(new Date().toISOString(), ...args);
+let logStream: fs.WriteStream | null = null;
+const pendingLogs: string[] = [];
+
+function write(level: 'log' | 'warn' | 'error', ...args: any[]) {
+  if (!debugEnabled) {
+    return;
   }
+  const line = `${new Date().toISOString()} ${args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ')}`;
+  if (process.stdout.isTTY) {
+    (console as any)[level](line);
+  }
+  if (logStream) {
+    logStream.write(line + '\n');
+  } else {
+    pendingLogs.push(line);
+  }
+}
+
+function log(...args: any[]) {
+  write('log', ...args);
 }
 
 function warn(...args: any[]) {
-  if (debugEnabled) {
-    console.warn(new Date().toISOString(), ...args);
-  }
+  write('warn', ...args);
 }
 
 function error(...args: any[]) {
-  if (debugEnabled) {
-    console.error(new Date().toISOString(), ...args);
-  }
+  write('error', ...args);
 }
 
 log('Application starting');
+
+function initLogging() {
+  if (!debugEnabled) {
+    return;
+  }
+  const logPath = path.join(app.getPath('userData'), 'debug.log');
+  fs.mkdirSync(path.dirname(logPath), { recursive: true });
+  logStream = fs.createWriteStream(logPath, { flags: 'a' });
+  for (const line of pendingLogs) {
+    logStream.write(line + '\n');
+  }
+  pendingLogs.length = 0;
+  if (!process.stdout.isTTY) {
+    console.log('Debug log written to', logPath);
+  }
+}
 
 async function createWindow() {
   log('Creating main window');
@@ -68,6 +96,7 @@ async function loadExtensions() {
 }
 
 app.whenReady().then(async () => {
+  initLogging();
   log('App is ready');
   ['CommandOrControl+T', 'CommandOrControl+N', 'F11', 'Alt+F4']
     .forEach(accel => globalShortcut.register(accel, () => {}));
