@@ -10,10 +10,10 @@
     "prepare-ext": "node scripts/prepare-ext.js"
   },
   "devDependencies": {
+    "adm-zip": "^0.5.10",
     "electron": "^26.0.0",
     "electron-builder": "^24.6.0",
-    "typescript": "^5.0.0",
-    "adm-zip": "^0.5.10"
+    "typescript": "^5.0.0"
   },
   "build": {
     "productName": "SingleSiteBrowser",
@@ -36,5 +36,8 @@
   },
   "bin": {
     "electron-tsc": "scripts/electron-tsc.js"
+  },
+  "dependencies": {
+    "electron-log": "^5.4.1"
   }
 }
