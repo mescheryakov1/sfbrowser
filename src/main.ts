@@ -62,9 +62,13 @@ app.whenReady().then(async () => {
   const hasManifest = nmContents.some(f => f.endsWith('.json'));
   const hasCryptoManifest = nmContents.includes('ru.cryptopro.nmcades.json');
   if (!hasManifest || !hasCryptoManifest) {
-    const placeholderDir = path.join(process.resourcesPath, 'native_host_placeholder');
-    log.info('Copying native messaging placeholder from', placeholderDir);
-    if (fs.existsSync(placeholderDir)) {
+    const placeholderCandidates = [
+      path.join(process.resourcesPath, 'native_host_placeholder'),
+      path.join(app.getAppPath(), 'native_host_placeholder')
+    ];
+    const placeholderDir = placeholderCandidates.find(candidate => fs.existsSync(candidate));
+    if (placeholderDir) {
+      log.info('Copying native messaging placeholder from', placeholderDir);
       try {
         fs.cpSync(placeholderDir, nmDir, { recursive: true });
         const stubPath = path.join(nmDir, 'cryptopro_stub.js');
@@ -88,7 +92,10 @@ app.whenReady().then(async () => {
         log.warn('Failed to copy native messaging placeholder:', err);
       }
     } else {
-      log.warn('Native host placeholder directory is missing', placeholderDir);
+      log.warn(
+        'Native host placeholder directory not found. Tried locations:',
+        placeholderCandidates.join(', ')
+      );
     }
   }
 
