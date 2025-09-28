@@ -71,17 +71,24 @@ app.whenReady().then(async () => {
       log.info('Copying native messaging placeholder from', placeholderDir);
       try {
         fs.cpSync(placeholderDir, nmDir, { recursive: true });
-        const stubPath = path.join(nmDir, 'cryptopro_stub.js');
+        const stubFileName = process.platform === 'win32'
+          ? 'cryptopro_stub.cmd'
+          : 'cryptopro_stub.js';
+        const stubPath = path.join(nmDir, stubFileName);
+        const jsStubPath = path.join(nmDir, 'cryptopro_stub.js');
         const manifestPath = path.join(nmDir, 'ru.cryptopro.nmcades.json');
-        if (fs.existsSync(stubPath)) {
-          fs.chmodSync(stubPath, 0o755);
-          log.info('Ensured execute permissions for native messaging stub', stubPath);
-        } else {
+        if (process.platform !== 'win32' && fs.existsSync(jsStubPath)) {
+          fs.chmodSync(jsStubPath, 0o755);
+          log.info('Ensured execute permissions for native messaging stub', jsStubPath);
+        }
+        if (!fs.existsSync(stubPath)) {
           log.warn('Native messaging stub not found after copy', stubPath);
+        } else {
+          log.info('Native messaging stub ready', stubPath);
         }
         try {
           const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-          manifest.path = path.resolve(nmDir, 'cryptopro_stub.js');
+          manifest.path = path.resolve(nmDir, stubFileName);
           fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
           log.info('Updated native messaging manifest', manifestPath, 'with path', manifest.path);
         } catch (manifestErr) {
