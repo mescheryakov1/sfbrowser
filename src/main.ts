@@ -54,6 +54,8 @@ function findNativeHostCandidates(): string[] {
   const order: string[] = [];
   if (process.platform === 'win32') {
     order.push('native_host_windows');
+  } else if (process.platform === 'linux') {
+    order.push('native_host_linux');
   }
   order.push('native_host_placeholder');
 
@@ -71,6 +73,19 @@ function findNativeHostCandidates(): string[] {
 }
 
 function findNativeHostExecutable(nmDir: string, manifestPathValue?: string): string | undefined {
+  const normalizedNmDir = path.resolve(nmDir);
+
+  if (manifestPathValue) {
+    const manifestCandidatePath = path.resolve(nmDir, manifestPathValue);
+    const isWithinDir = manifestCandidatePath === normalizedNmDir || manifestCandidatePath.startsWith(`${normalizedNmDir}${path.sep}`);
+    if (isWithinDir && fs.existsSync(manifestCandidatePath)) {
+      const relative = path.relative(nmDir, manifestCandidatePath);
+      if (!relative.startsWith('..')) {
+        return relative || path.basename(manifestCandidatePath);
+      }
+    }
+  }
+
   const entries = fs.readdirSync(nmDir);
   const lowerEntries = entries.map(entry => entry.toLowerCase());
   const manifestCandidate = manifestPathValue ? path.basename(manifestPathValue) : undefined;
