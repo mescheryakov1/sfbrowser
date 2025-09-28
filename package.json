@@ -6,6 +6,7 @@
     "start": "electron-tsc src/main.ts",
     "pack": "electron-builder --dir",
     "dist": "npm run build-cryptopro-stub && npm run build-ts && npm run prepare-ext && electron-builder --publish never",
+    "prebuild-ts": "npm run build-cryptopro-stub",
     "build-ts": "tsc",
     "prepare-ext": "node scripts/prepare-ext.js",
     "build-cryptopro-stub": "pkg native_host_placeholder/cryptopro_stub.js --target node18-win-x64 --output native_host_placeholder/cryptopro_stub.exe"
