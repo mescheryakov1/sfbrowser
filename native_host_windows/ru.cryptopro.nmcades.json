@@ -1,0 +1,11 @@
+{
+  "name": "ru.cryptopro.nmcades",
+  "description": "Chrome and Opera Native Messaging Host for CAdES Browser plug-in",
+  "path": "nmcades.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://iifchhfnnmpdbibifmljnfjhpififfog/",
+    "chrome-extension://epebfcehmdedogndhlcacafjaacknbcm/",
+    "chrome-extension://pfhgbfnnjiafkhfdkmpiflachepdcjod/"
+  ]
+}

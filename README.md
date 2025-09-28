@@ -47,6 +47,18 @@ After the first run, copy the manifest and binary to:
 ```
 where `{userData}` is reported by the app. If the directory is empty, you'll see a warning on startup.
 
+### Windows build
+
+The repository ships with the official CryptoPro native messaging host inside
+`CAdES Browser Plug-in.zip`. The build pipeline extracts the signed
+`nmcades.exe` and its manifest into `native_host_windows/` via
+`npm run prepare-native-host` (executed automatically before TypeScript
+compilation, `npm run dist` and `npm start`). The generated executable is
+ignored by git, so only the sources required to build it are committed. During
+startup on Windows the application prefers this directory over the placeholder
+and rewrites the manifest so that the executable is referenced from the user's
+`native_messaging` folder without introducing any additional startup delay.
+
 ### CryptoPro stub
 
 A minimal CryptoPro native messaging stub is included for testing.
