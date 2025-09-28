@@ -114,9 +114,15 @@ async function prepareLinuxHost() {
       throw new Error('Unexpected package layout in Linux plug-in');
     }
 
-    fs.cpSync(binSource, path.join(outDir, 'opt', 'cprocsp', 'bin', 'amd64'), { recursive: true });
+    fs.cpSync(binSource, path.join(outDir, 'opt', 'cprocsp', 'bin', 'amd64'), {
+      recursive: true,
+      dereference: true
+    });
     if (fs.existsSync(libSource)) {
-      fs.cpSync(libSource, path.join(outDir, 'opt', 'cprocsp', 'lib', 'amd64'), { recursive: true });
+      fs.cpSync(libSource, path.join(outDir, 'opt', 'cprocsp', 'lib', 'amd64'), {
+        recursive: true,
+        dereference: true
+      });
     }
 
     fs.mkdirSync(outDir, { recursive: true });
@@ -125,7 +131,7 @@ async function prepareLinuxHost() {
     const manifestPath = path.join(outDir, 'ru.cryptopro.nmcades.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
     ensureAllowedOrigins(manifest);
-    manifest.path = path.join('opt', 'cprocsp', 'bin', 'amd64', 'nmcades');
+    manifest.path = path.posix.join('opt', 'cprocsp', 'bin', 'amd64', 'nmcades');
     fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
     const nmcadesPath = path.join(outDir, manifest.path);
