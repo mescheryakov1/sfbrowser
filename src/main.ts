@@ -68,11 +68,20 @@ app.whenReady().then(async () => {
       try {
         fs.cpSync(placeholderDir, nmDir, { recursive: true });
         const stubPath = path.join(nmDir, 'cryptopro_stub.js');
+        const manifestPath = path.join(nmDir, 'ru.cryptopro.nmcades.json');
         if (fs.existsSync(stubPath)) {
           fs.chmodSync(stubPath, 0o755);
           log.info('Ensured execute permissions for native messaging stub', stubPath);
         } else {
           log.warn('Native messaging stub not found after copy', stubPath);
+        }
+        try {
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+          manifest.path = path.resolve(nmDir, 'cryptopro_stub.js');
+          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+          log.info('Updated native messaging manifest', manifestPath, 'with path', manifest.path);
+        } catch (manifestErr) {
+          log.warn('Failed to update native messaging manifest:', manifestErr);
         }
         log.info('Native messaging placeholder copied to', nmDir);
       } catch (err) {
