@@ -71,19 +71,25 @@ app.whenReady().then(async () => {
       log.info('Copying native messaging placeholder from', placeholderDir);
       try {
         fs.cpSync(placeholderDir, nmDir, { recursive: true });
-        const stubFileName = process.platform === 'win32'
-          ? 'cryptopro_stub.cmd'
-          : 'cryptopro_stub.js';
-        const stubPath = path.join(nmDir, stubFileName);
+        const isWindows = process.platform === 'win32';
         const jsStubPath = path.join(nmDir, 'cryptopro_stub.js');
+        const stubCandidates = isWindows
+          ? ['cryptopro_stub.exe', 'cryptopro_stub.cmd', 'cryptopro_stub.js']
+          : ['cryptopro_stub.js'];
+        const resolvedStub = stubCandidates.find(candidate => fs.existsSync(path.join(nmDir, candidate)));
+        const stubFileName = resolvedStub ?? stubCandidates[0];
+        const stubPath = path.join(nmDir, stubFileName);
         const manifestPath = path.join(nmDir, 'ru.cryptopro.nmcades.json');
-        if (process.platform !== 'win32' && fs.existsSync(jsStubPath)) {
+        if (!isWindows && fs.existsSync(jsStubPath)) {
           fs.chmodSync(jsStubPath, 0o755);
           log.info('Ensured execute permissions for native messaging stub', jsStubPath);
         }
         if (!fs.existsSync(stubPath)) {
           log.warn('Native messaging stub not found after copy', stubPath);
         } else {
+          if (isWindows && stubFileName !== 'cryptopro_stub.exe') {
+            log.warn('Native messaging executable missing, falling back to', stubFileName);
+          }
           log.info('Native messaging stub ready', stubPath);
         }
         try {
