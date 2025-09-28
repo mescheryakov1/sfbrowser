@@ -1,0 +1,10 @@
+{
+  "name": "ru.cryptopro.nmcades",
+  "type": "stdio",
+  "path": "./cryptopro_stub.js",
+  "description": "Stub host for CryptoPro Native Messaging",
+  "allowed_origins": [
+    "chrome-extension://iifchhfnnmpdbibifmljnfjhpififfog/",
+    "chrome-extension://pfhgbfnnjiafkhfdkmpiflachepdcjod/"
+  ]
+}
