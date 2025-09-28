@@ -43,7 +43,7 @@ The resulting directories will then be packaged as-is.
 Provide your host manifest and executable inside `native_host_placeholder/` to package with the application.
 After the first run, copy the manifest and binary to:
 ```
-{userData}/native_messaging/
+{userData}/NativeMessagingHosts/
 ```
 where `{userData}` is reported by the app. If the directory is empty, you'll see a warning on startup.
 
@@ -57,7 +57,7 @@ compilation, `npm run dist` and `npm start`). The generated executable is
 ignored by git, so only the sources required to build it are committed. During
 startup on Windows the application prefers this directory over the placeholder
 and rewrites the manifest so that the executable is referenced from the user's
-`native_messaging` folder without introducing any additional startup delay.
+`NativeMessagingHosts` folder without introducing any additional startup delay.
 
 ### CryptoPro stub
 
