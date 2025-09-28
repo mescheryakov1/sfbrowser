@@ -7,6 +7,60 @@ log.transports.file.level = 'info';
 log.transports.file.maxSize = 5_242_880; // 5 MiB
 log.info('=== app start ===');
 
+function initializeNativeMessagingHost(nmDir: string): boolean {
+  const srcDir = path.join(process.resourcesPath, 'native_host_placeholder');
+  if (!fs.existsSync(srcDir)) {
+    log.warn('Native host placeholder directory not found at', srcDir);
+    return false;
+  }
+
+  const entries = fs.readdirSync(srcDir, { withFileTypes: true }).filter(e => e.isFile());
+  if (!entries.length) {
+    log.warn('Native host placeholder directory is empty at', srcDir);
+    return false;
+  }
+
+  const binaries = entries.filter(e => !e.name.endsWith('.json'));
+  const manifests = entries.filter(e => e.name.endsWith('.json'));
+
+  for (const entry of binaries) {
+    const srcPath = path.join(srcDir, entry.name);
+    const destPath = path.join(nmDir, entry.name);
+    try {
+      fs.copyFileSync(srcPath, destPath);
+      if (process.platform !== 'win32') {
+        fs.chmodSync(destPath, 0o755);
+      }
+    } catch (error) {
+      log.warn('Failed to copy native host binary', srcPath, error);
+    }
+  }
+
+  for (const entry of manifests) {
+    const srcPath = path.join(srcDir, entry.name);
+    const destPath = path.join(nmDir, entry.name);
+    try {
+      const manifest = JSON.parse(fs.readFileSync(srcPath, 'utf8'));
+      if (typeof manifest.path === 'string') {
+        const executableName = path.basename(manifest.path);
+        manifest.path = path.join(nmDir, executableName);
+      }
+      fs.writeFileSync(destPath, JSON.stringify(manifest, null, 2));
+    } catch (error) {
+      log.warn('Failed to write native host manifest', srcPath, error);
+    }
+  }
+
+  const copiedManifests = manifests.map(entry => path.join(nmDir, entry.name)).filter(dest => fs.existsSync(dest));
+  if (!copiedManifests.length) {
+    log.warn('No native messaging manifests were copied to', nmDir);
+    return false;
+  }
+
+  log.info('Native messaging host files initialized in', nmDir);
+  return true;
+}
+
 async function createWindow() {
   log.info('Creating browser window');
   const win = new BrowserWindow({
@@ -60,7 +114,10 @@ app.whenReady().then(async () => {
   }
   const hasManifest = fs.readdirSync(nmDir).some(f => f.endsWith('.json'));
   if (!hasManifest) {
-    log.warn('TODO: разместите manifest и бинарь хоста');
+    const copied = initializeNativeMessagingHost(nmDir);
+    if (!copied) {
+      log.warn('TODO: разместите manifest и бинарь хоста');
+    }
   }
 
   log.info('Creating main window');

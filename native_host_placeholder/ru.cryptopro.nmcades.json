@@ -1,0 +1,10 @@
+{
+  "name": "ru.cryptopro.nmcades",
+  "description": "Placeholder native host for CryptoPro browser integration",
+  "path": "ru.cryptopro.nmcades.js",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://iifchhfnnmpdbibifmljnfjhpififfog/",
+    "chrome-extension://pfhgbfnnjiafkhfdkmpiflachepdcjod/"
+  ]
+}
