@@ -1,23 +1,11 @@
-import log from 'electron-log';
-log.initialize({ preload: true });       // перехватывает console.* в рендерере
-log.transports.file.level = 'debug';     // или 'silly' для полной детализации
-log.transports.console.level = 'debug';
-log.transports.file.format =
-  '{y}-{m}-{d} {h}:{i}:{s}.{ms} | {processType}:{level} | {text}';
-log.info('=== App start with DEBUG level ===');
-
 import { app, BrowserWindow, session, globalShortcut } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import log from 'electron-log';
 
-app.commandLine.appendSwitch('enable-logging');
-log.debug('[main] chromium logging enabled');
-
-app.once('ready', () => log.debug('[main] app ready'));
-app.on('before-quit', () => log.debug('[main] before quit'));
-process.on('uncaughtException', e => log.error('[main] uncaught', e));
-
+log.transports.file.level = 'info';
 log.transports.file.maxSize = 5_242_880; // 5 MiB
+log.info('=== app start ===');
 
 async function createWindow() {
   log.info('Creating browser window');
@@ -30,14 +18,6 @@ async function createWindow() {
       webviewTag: true
     }
   });
-
-  log.debug('[main] BrowserWindow created');
-
-  win.once('ready-to-show', () => log.debug('[win] ready-to-show'));
-  win.webContents.on('did-start-loading', () =>
-    log.debug('[win] did-start-loading'));
-  win.webContents.on('did-finish-load', () =>
-    log.debug('[win] did-finish-load'));
 
   win.setMenuBarVisibility(false);
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -53,13 +33,13 @@ async function loadExtensions() {
     const dirs = fs.readdirSync(extRoot, { withFileTypes: true })
       .filter(d => d.isDirectory())
       .map(d => path.join(extRoot, d.name));
-      for (const dir of dirs) {
-        try {
-          await session.defaultSession.loadExtension(dir, { allowFileAccess: true });
-          log.info('Extension loaded from', dir);
-        } catch (e) {
-          log.warn('Failed to load extension from', dir, e);
-        }
+    for (const dir of dirs) {
+      try {
+        await session.defaultSession.loadExtension(dir, { allowFileAccess: true });
+        log.info('Extension loaded from', dir);
+      } catch (e) {
+        log.warn('Failed to load extension from', dir, e);
+      }
     }
     if (!dirs.length) {
       log.warn('TODO: поместите сюда своё расширение');
@@ -68,18 +48,6 @@ async function loadExtensions() {
     log.warn('TODO: поместите сюда своё расширение');
   }
 }
-
-async function loadCryptoProExt() {
-  const extDir = path.join(process.resourcesPath, 'crypto_extension');
-  await session.defaultSession.loadExtension(extDir);
-  log.debug('[ext] CryptoPro extension loaded');
-}
-
-session.defaultSession.on('select-serial-port', () =>
-  log.debug('[ext] select-serial-port triggered'));
-
-(session.defaultSession as any).on('service-worker-context-lost', (e: unknown) =>
-  log.debug('[ext] service-worker lost', e));
 
 app.whenReady().then(async () => {
   ['CommandOrControl+T', 'CommandOrControl+N', 'F11', 'Alt+F4']
@@ -101,7 +69,6 @@ app.whenReady().then(async () => {
   // Загрузка расширений после отображения окна
   log.info('Loading extensions');
   loadExtensions().catch(e => log.error(e));
-  loadCryptoProExt().catch(e => log.error(e));
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -111,7 +78,6 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  log.debug('[main] all windows closed');
   if (process.platform !== 'darwin') {
     app.quit();
   }
