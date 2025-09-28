@@ -49,6 +49,55 @@ async function loadExtensions() {
   }
 }
 
+function findNativeHostCandidates(): string[] {
+  const baseDirs = [process.resourcesPath, app.getAppPath()];
+  const order: string[] = [];
+  if (process.platform === 'win32') {
+    order.push('native_host_windows');
+  }
+  order.push('native_host_placeholder');
+
+  const seen = new Set<string>();
+  const candidates: string[] = [];
+  for (const dirName of order) {
+    for (const base of baseDirs) {
+      const candidate = path.join(base, dirName);
+      if (seen.has(candidate)) continue;
+      seen.add(candidate);
+      candidates.push(candidate);
+    }
+  }
+  return candidates;
+}
+
+function findNativeHostExecutable(nmDir: string, manifestPathValue?: string): string | undefined {
+  const entries = fs.readdirSync(nmDir);
+  const lowerEntries = entries.map(entry => entry.toLowerCase());
+  const manifestCandidate = manifestPathValue ? path.basename(manifestPathValue) : undefined;
+  if (manifestCandidate) {
+    const normalizedManifestCandidate = manifestCandidate.toLowerCase();
+    const manifestIndex = lowerEntries.indexOf(normalizedManifestCandidate);
+    if (manifestIndex !== -1) {
+      return entries[manifestIndex];
+    }
+  }
+
+  const findByExtension = (ext: string) => {
+    const idx = lowerEntries.findIndex(entry => entry.endsWith(ext));
+    return idx === -1 ? undefined : entries[idx];
+  };
+
+  if (process.platform === 'win32') {
+    const exactMatchIdx = lowerEntries.indexOf('nmcades.exe');
+    if (exactMatchIdx !== -1) {
+      return entries[exactMatchIdx];
+    }
+    return findByExtension('.exe') ?? findByExtension('.cmd') ?? findByExtension('.bat');
+  }
+
+  return findByExtension('.js') ?? findByExtension('.sh');
+}
+
 app.whenReady().then(async () => {
   ['CommandOrControl+T', 'CommandOrControl+N', 'F11', 'Alt+F4']
     .forEach(accel => globalShortcut.register(accel, () => {}));
@@ -58,58 +107,52 @@ app.whenReady().then(async () => {
   if (!fs.existsSync(nmDir)) {
     fs.mkdirSync(nmDir, { recursive: true });
   }
-  const nmContents = fs.readdirSync(nmDir);
+  let nmContents = fs.readdirSync(nmDir);
   const hasManifest = nmContents.some(f => f.endsWith('.json'));
   const hasCryptoManifest = nmContents.includes('ru.cryptopro.nmcades.json');
   if (!hasManifest || !hasCryptoManifest) {
-    const placeholderCandidates = [
-      path.join(process.resourcesPath, 'native_host_placeholder'),
-      path.join(app.getAppPath(), 'native_host_placeholder')
-    ];
-    const placeholderDir = placeholderCandidates.find(candidate => fs.existsSync(candidate));
-    if (placeholderDir) {
-      log.info('Copying native messaging placeholder from', placeholderDir);
+    const hostCandidates = findNativeHostCandidates();
+    const hostDir = hostCandidates.find(candidate => fs.existsSync(candidate));
+    if (hostDir) {
+      log.info('Copying native messaging host from', hostDir);
       try {
-        fs.cpSync(placeholderDir, nmDir, { recursive: true });
-        const isWindows = process.platform === 'win32';
-        const jsStubPath = path.join(nmDir, 'cryptopro_stub.js');
-        const stubCandidates = isWindows
-          ? ['cryptopro_stub.exe', 'cryptopro_stub.cmd', 'cryptopro_stub.js']
-          : ['cryptopro_stub.js'];
-        const resolvedStub = stubCandidates.find(candidate => fs.existsSync(path.join(nmDir, candidate)));
-        const stubFileName = resolvedStub ?? stubCandidates[0];
-        const stubPath = path.join(nmDir, stubFileName);
-        const manifestPath = path.join(nmDir, 'ru.cryptopro.nmcades.json');
-        if (!isWindows && fs.existsSync(jsStubPath)) {
-          fs.chmodSync(jsStubPath, 0o755);
-          log.info('Ensured execute permissions for native messaging stub', jsStubPath);
-        }
-        if (!fs.existsSync(stubPath)) {
-          log.warn('Native messaging stub not found after copy', stubPath);
-        } else {
-          if (isWindows && stubFileName !== 'cryptopro_stub.exe') {
-            log.warn('Native messaging executable missing, falling back to', stubFileName);
-          }
-          log.info('Native messaging stub ready', stubPath);
-        }
-        try {
-          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-          manifest.path = path.resolve(nmDir, stubFileName);
-          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-          log.info('Updated native messaging manifest', manifestPath, 'with path', manifest.path);
-        } catch (manifestErr) {
-          log.warn('Failed to update native messaging manifest:', manifestErr);
-        }
-        log.info('Native messaging placeholder copied to', nmDir);
+        fs.cpSync(hostDir, nmDir, { recursive: true });
+        nmContents = fs.readdirSync(nmDir);
+        log.info('Native messaging host copied to', nmDir);
       } catch (err) {
-        log.warn('Failed to copy native messaging placeholder:', err);
+        log.warn('Failed to copy native messaging host:', err);
       }
     } else {
-      log.warn(
-        'Native host placeholder directory not found. Tried locations:',
-        placeholderCandidates.join(', ')
-      );
+      log.warn('Native host directory not found. Tried locations:', hostCandidates.join(', '));
     }
+  }
+
+  const manifestPath = path.join(nmDir, 'ru.cryptopro.nmcades.json');
+  if (fs.existsSync(manifestPath)) {
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      const executableName = findNativeHostExecutable(nmDir, manifest.path);
+      if (!executableName) {
+        log.warn('Native messaging executable not found in', nmDir);
+      } else {
+        const executablePath = path.resolve(nmDir, executableName);
+        if (process.platform !== 'win32' && executableName.endsWith('.js')) {
+          try {
+            fs.chmodSync(executablePath, 0o755);
+            log.info('Ensured execute permissions for native messaging stub', executablePath);
+          } catch (chmodErr) {
+            log.warn('Failed to set execute permissions for native messaging stub:', chmodErr);
+          }
+        }
+        manifest.path = executablePath;
+        fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+        log.info('Native messaging manifest updated at', manifestPath, 'with path', manifest.path);
+      }
+    } catch (manifestErr) {
+      log.warn('Failed to update native messaging manifest:', manifestErr);
+    }
+  } else {
+    log.warn('Native messaging manifest not found at', manifestPath);
   }
 
   log.info('Creating main window');

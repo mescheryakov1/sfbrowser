@@ -5,10 +5,12 @@
   "scripts": {
     "start": "electron-tsc src/main.ts",
     "pack": "electron-builder --dir",
-    "dist": "npm run build-cryptopro-stub && npm run build-ts && npm run prepare-ext && electron-builder --publish never",
-    "prebuild-ts": "npm run build-cryptopro-stub",
+    "dist": "npm run build-ts && npm run prepare-ext && electron-builder --publish never",
+    "prestart": "npm run prepare-native-host",
+    "prebuild-ts": "npm run prepare-native-host && npm run build-cryptopro-stub",
     "build-ts": "tsc",
     "prepare-ext": "node scripts/prepare-ext.js",
+    "prepare-native-host": "node scripts/prepare-native-host.js",
     "build-cryptopro-stub": "pkg native_host_placeholder/cryptopro_stub.js --target node18-win-x64 --output native_host_placeholder/cryptopro_stub.exe"
   },
   "devDependencies": {
@@ -27,7 +29,8 @@
     ],
     "extraResources": [
       "embedded_ext_placeholder",
-      "native_host_placeholder"
+      "native_host_placeholder",
+      "native_host_windows"
     ],
     "asar": true,
     "win": {

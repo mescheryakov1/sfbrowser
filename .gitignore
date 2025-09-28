@@ -3,3 +3,4 @@ dist/
 embedded_ext_placeholder/ext_v2/
 embedded_ext_placeholder/ext_v3/
 native_host_placeholder/cryptopro_stub.exe
+native_host_windows/nmcades.exe
