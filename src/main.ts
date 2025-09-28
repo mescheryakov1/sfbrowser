@@ -117,8 +117,9 @@ app.whenReady().then(async () => {
   ['CommandOrControl+T', 'CommandOrControl+N', 'F11', 'Alt+F4']
     .forEach(accel => globalShortcut.register(accel, () => {}));
 
-  const nmDir = path.join(app.getPath('userData'), 'native_messaging');
-  log.info('Native messaging dir', nmDir);
+  const nmDirName = 'NativeMessagingHosts';
+  const nmDir = path.join(app.getPath('userData'), nmDirName);
+  log.info('Native messaging hosts dir', nmDir);
   if (!fs.existsSync(nmDir)) {
     fs.mkdirSync(nmDir, { recursive: true });
   }
