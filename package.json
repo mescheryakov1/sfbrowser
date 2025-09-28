@@ -18,6 +18,7 @@
     "electron": "^26.0.0",
     "electron-builder": "^24.6.0",
     "pkg": "^5.8.1",
+    "tar": "^6.2.0",
     "typescript": "^5.0.0"
   },
   "build": {
@@ -30,6 +31,7 @@
     "extraResources": [
       "embedded_ext_placeholder",
       "native_host_placeholder",
+      "native_host_linux",
       "native_host_windows"
     ],
     "asar": true,
