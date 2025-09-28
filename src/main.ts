@@ -58,9 +58,29 @@ app.whenReady().then(async () => {
   if (!fs.existsSync(nmDir)) {
     fs.mkdirSync(nmDir, { recursive: true });
   }
-  const hasManifest = fs.readdirSync(nmDir).some(f => f.endsWith('.json'));
-  if (!hasManifest) {
-    log.warn('TODO: разместите manifest и бинарь хоста');
+  const nmContents = fs.readdirSync(nmDir);
+  const hasManifest = nmContents.some(f => f.endsWith('.json'));
+  const hasCryptoManifest = nmContents.includes('ru.cryptopro.nmcades.json');
+  if (!hasManifest || !hasCryptoManifest) {
+    const placeholderDir = path.join(process.resourcesPath, 'native_host_placeholder');
+    log.info('Copying native messaging placeholder from', placeholderDir);
+    if (fs.existsSync(placeholderDir)) {
+      try {
+        fs.cpSync(placeholderDir, nmDir, { recursive: true });
+        const stubPath = path.join(nmDir, 'cryptopro_stub.js');
+        if (fs.existsSync(stubPath)) {
+          fs.chmodSync(stubPath, 0o755);
+          log.info('Ensured execute permissions for native messaging stub', stubPath);
+        } else {
+          log.warn('Native messaging stub not found after copy', stubPath);
+        }
+        log.info('Native messaging placeholder copied to', nmDir);
+      } catch (err) {
+        log.warn('Failed to copy native messaging placeholder:', err);
+      }
+    } else {
+      log.warn('Native host placeholder directory is missing', placeholderDir);
+    }
   }
 
   log.info('Creating main window');
