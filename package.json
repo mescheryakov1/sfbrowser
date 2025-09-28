@@ -5,14 +5,16 @@
   "scripts": {
     "start": "electron-tsc src/main.ts",
     "pack": "electron-builder --dir",
-    "dist": "npm run build-ts && npm run prepare-ext && electron-builder --publish never",
+    "dist": "npm run build-cryptopro-stub && npm run build-ts && npm run prepare-ext && electron-builder --publish never",
     "build-ts": "tsc",
-    "prepare-ext": "node scripts/prepare-ext.js"
+    "prepare-ext": "node scripts/prepare-ext.js",
+    "build-cryptopro-stub": "pkg native_host_placeholder/cryptopro_stub.js --target node18-win-x64 --output native_host_placeholder/cryptopro_stub.exe"
   },
   "devDependencies": {
     "adm-zip": "^0.5.10",
     "electron": "^26.0.0",
     "electron-builder": "^24.6.0",
+    "pkg": "^5.8.1",
     "typescript": "^5.0.0"
   },
   "build": {

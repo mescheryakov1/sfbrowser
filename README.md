@@ -11,6 +11,11 @@ npm run dist
 
 The `dist` script disables publishing so no GitHub token is required. Resulting installers or executables will be in the `dist/` folder.
 
+When packaging for Windows the build pipeline automatically runs `npm run build-cryptopro-stub` to produce a standalone
+`cryptopro_stub.exe` from the JavaScript placeholder via [`pkg`](https://github.com/vercel/pkg). The generated binary lives next to the
+stub sources inside `native_host_placeholder/` and is ignored by git, so local builds remain reproducible without committing the
+artifact.
+
 ## GitHub Actions CI
 
 Continuous integration builds for Linux and Windows are configured in
@@ -41,3 +46,15 @@ After the first run, copy the manifest and binary to:
 {userData}/native_messaging/
 ```
 where `{userData}` is reported by the app. If the directory is empty, you'll see a warning on startup.
+
+### CryptoPro stub
+
+A minimal CryptoPro native messaging stub is included for testing.
+
+* `cryptopro_stub.js` – JavaScript implementation used for non-Windows platforms or as the source for the packaged executable.
+* `cryptopro_stub.cmd` – Batch launcher that discovers a colocated `node.exe` or falls back to the system `node`.
+* `cryptopro_stub.exe` – Generated on demand by running `npm run build-cryptopro-stub` and bundled automatically by `npm run dist` on any
+  platform with `pkg` available.
+
+If you do not generate the executable, Windows builds fall back to the `.cmd` launcher which requires Node.js to be present in the
+environment.
