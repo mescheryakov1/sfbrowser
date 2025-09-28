@@ -40,20 +40,39 @@ function prepareWindowsHost() {
 
   const zip = new AdmZip(zipPath);
 
-  function extractEntry(entryName, targetName) {
-    const entry = zip.getEntry(entryName);
-    if (!entry) {
-      console.error('Entry not found in archive:', entryName);
-      process.exit(1);
-    }
-    const data = entry.getData();
-    fs.writeFileSync(path.join(outDir, targetName ?? path.basename(entryName)), data);
+  const pluginPrefix = 'CAdES Browser Plug-in/';
+  const entries = zip.getEntries().filter(entry => entry.entryName.startsWith(pluginPrefix));
+
+  if (entries.length === 0) {
+    console.error('CAdES Browser Plug-in directory not found in archive');
+    process.exit(1);
   }
 
-  extractEntry('CAdES Browser Plug-in/nmcades.exe');
-  extractEntry('CAdES Browser Plug-in/nmcades.json', 'ru.cryptopro.nmcades.json');
+  for (const entry of entries) {
+    const relativePath = entry.entryName.slice(pluginPrefix.length);
+    if (!relativePath) {
+      continue;
+    }
+
+    const targetPath = path.join(outDir, relativePath);
+
+    if (entry.isDirectory) {
+      fs.mkdirSync(targetPath, { recursive: true });
+      continue;
+    }
+
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    fs.writeFileSync(targetPath, entry.getData());
+  }
+
+  const sourceManifestPath = path.join(outDir, 'nmcades.json');
+  if (!fs.existsSync(sourceManifestPath)) {
+    console.error('Expected manifest nmcades.json not found after extraction');
+    process.exit(1);
+  }
 
   const manifestPath = path.join(outDir, 'ru.cryptopro.nmcades.json');
+  fs.copyFileSync(sourceManifestPath, manifestPath);
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
   ensureAllowedOrigins(manifest);
   manifest.path = 'nmcades.exe';
