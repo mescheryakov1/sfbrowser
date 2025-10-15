@@ -27,6 +27,22 @@ function ensureAllowedOrigins(manifest) {
   manifest.allowed_origins = Array.from(new Set([...(manifest.allowed_origins || []), ...requiredOrigins]));
 }
 
+function sanitizeRelativePath(entryPath) {
+  const unixPath = entryPath.replace(/\\/g, '/');
+
+  if (!unixPath || unixPath.startsWith('/') || /^[A-Za-z]:/.test(unixPath)) {
+    return null;
+  }
+
+  const normalized = path.posix.normalize(unixPath);
+
+  if (normalized === '..' || normalized.startsWith('../') || path.posix.isAbsolute(normalized)) {
+    return null;
+  }
+
+  return normalized;
+}
+
 function prepareWindowsHost() {
   const zipPath = path.join(projectRoot, 'CAdES Browser Plug-in.zip');
   const outDir = path.join(projectRoot, 'native_host_windows');
@@ -54,7 +70,13 @@ function prepareWindowsHost() {
       continue;
     }
 
-    const targetPath = path.join(outDir, relativePath);
+    const safeRelativePath = sanitizeRelativePath(relativePath);
+    if (!safeRelativePath) {
+      console.error('Unsafe path detected in plugin archive entry:', relativePath);
+      process.exit(1);
+    }
+
+    const targetPath = path.join(outDir, safeRelativePath);
 
     if (entry.isDirectory) {
       fs.mkdirSync(targetPath, { recursive: true });
